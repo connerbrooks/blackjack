@@ -23,8 +23,16 @@ public class Card {
         return val + " of " + suitList[suit];
     }
 
-    public int getCardNumber() {
-        return (rank - 1) + (suit - 1)  * 13;
+    public int getRank() {
+        return rank;
+    }
+
+    public int getSuit() {
+        return suit;
+    }
+
+    public int getCardIndex() {
+        return (rank - 2) + (suit - 1)  * 13;
     }
 
 

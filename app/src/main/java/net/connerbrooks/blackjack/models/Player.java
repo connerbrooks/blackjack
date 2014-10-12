@@ -8,6 +8,15 @@ public class Player {
     private String name;
     private ArrayList<Card> hand;
     private int chips;
+    private int score;
+
+    public int getScore() {
+        return score;
+    }
+
+    public void setScore(int score) {
+        this.score = score;
+    }
 
     public Player(String name, int chips) {
         this.name = name;

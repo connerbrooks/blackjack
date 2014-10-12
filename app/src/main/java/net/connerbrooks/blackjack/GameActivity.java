@@ -15,8 +15,10 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import net.connerbrooks.blackjack.models.Card;
+import net.connerbrooks.blackjack.models.Player;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,12 +36,16 @@ public class GameActivity extends Activity implements Runnable{
 
     Bitmap[] cardImages;
     Bitmap mCardBack;
+    TextView textView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+        textView  = (TextView) findViewById(R.id.winner_text);
         game = new Game();
+        game.nextPlayer();
+        textView.setText(game.getCurrentPlayer().getName() + "'s turn!");
 
         loadBitmaps();
 
@@ -53,12 +59,26 @@ public class GameActivity extends Activity implements Runnable{
         thread.start();
 
 
-
         hit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 game.hit(game.getCurrentPlayer());
                 waitingForInput = false;
+            }
+        });
+
+        stay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                waitingForInput = false;
+                game.isHoleFlipped = false;
+                game.nextPlayer();
+                textView.setText(game.getCurrentPlayer().getName() + "'s turn!");
+
+                Player winner = game.scoreHands();
+                if(winner != null) {
+                    textView.setText(winner.getName() + "Wins!");
+                }
             }
         });
     }
@@ -98,11 +118,21 @@ public class GameActivity extends Activity implements Runnable{
         if (id == R.id.action_settings) {
             return true;
         }
+        if (id == R.id.action_reset) {
+            resetGame();
+        }
         return super.onOptionsItemSelected(item);
     }
 
     boolean waitingForInput = false;
 
+    public void resetGame() {
+        game = new Game();
+        // start with player1
+        game.nextPlayer();
+        textView.setText(game.getCurrentPlayer().getName() + "'s turn!");
+        waitingForInput = false;
+    }
 
     @Override
     public void run() {
@@ -135,9 +165,9 @@ public class GameActivity extends Activity implements Runnable{
 
         // paint a rectangular shape that fill the surface.
         int border = 20;
-        RectF r = new RectF(border, border, canvas.getWidth()-20, canvas.getHeight()-20);
+        RectF r = new RectF(border, border, canvas.getWidth()-5, canvas.getHeight()-5);
         Paint paint = new Paint();
-        paint.setARGB(200, 135, 135, 135); //paint color GRAY+SEMY TRANSPARENT
+        paint.setARGB(200, 135, 135, 135); //paint color GRAY+SEMI TRANSPARENT
         canvas.drawRect(r , paint );
 
 
@@ -147,15 +177,16 @@ public class GameActivity extends Activity implements Runnable{
             for( int j=0; j < hand.size(); j++ )
             {
                 Card c = hand.get(j);
+                Log.i("player", game.getCurrentPlayer().getName());
 
-                if( i == 0 && j == 0 && !game.isHoleFlipped)
+                if( i == 0 && j == 0 && game.isHoleFlipped)
                 {
                     canvas.drawBitmap(mCardBack, 400 + j * 50, 100 + i * 400, null );
                 }
                 else
                 {
-                    Log.i("Card number", "" + c.getCardNumber());
-                    canvas.drawBitmap(cardImages[c.getCardNumber()], 400 + j * 50, 100 + i * 400, null );
+                    Log.i("Card number", "" + c.getCardIndex());
+                    canvas.drawBitmap(cardImages[c.getCardIndex()], 400 + j * 50, 100 + i * 400, null );
                 }
             }
         }
@@ -192,6 +223,7 @@ public class GameActivity extends Activity implements Runnable{
         //RESTART THREAD AND OPEN LOCKER FOR run();
         locker = true;
         thread = new Thread(this);
+
         thread.start();
     }
 
