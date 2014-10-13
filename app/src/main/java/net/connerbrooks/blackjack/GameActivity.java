@@ -5,8 +5,7 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.RectF;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -36,16 +35,20 @@ public class GameActivity extends Activity implements Runnable{
 
     Bitmap[] cardImages;
     Bitmap mCardBack;
+
     TextView textView;
+    TextView dealerText;
+    TextView playerText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
-        textView  = (TextView) findViewById(R.id.winner_text);
+        textView  = (TextView) findViewById(R.id.winnerText);
+        dealerText = (TextView) findViewById(R.id.dealerText);
+        playerText = (TextView) findViewById(R.id.playerText);
+
         game = new Game();
-        game.nextPlayer();
-        textView.setText(game.getCurrentPlayer().getName() + "'s turn!");
 
         loadBitmaps();
 
@@ -62,7 +65,13 @@ public class GameActivity extends Activity implements Runnable{
         hit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                game.hit(game.getCurrentPlayer());
+                Player curr = game.getCurrentPlayer();
+                game.hit();
+                if(game.score(curr) > 21) {
+                    textView.setText(curr.getName() + " busts!");
+                    dealerAI();
+                }
+
                 waitingForInput = false;
             }
         });
@@ -73,12 +82,7 @@ public class GameActivity extends Activity implements Runnable{
                 waitingForInput = false;
                 game.isHoleFlipped = false;
                 game.nextPlayer();
-                textView.setText(game.getCurrentPlayer().getName() + "'s turn!");
-
-                Player winner = game.scoreHands();
-                if(winner != null) {
-                    textView.setText(winner.getName() + "Wins!");
-                }
+                dealerAI();
             }
         });
     }
@@ -99,7 +103,24 @@ public class GameActivity extends Activity implements Runnable{
             }
             cardImages[i] = Bitmap.createScaledBitmap(bitmap, 138, 186, false);
         }
+    }
 
+    void dealerAI() {
+        Player dealer = game.getCurrentPlayer();
+        game.isHoleFlipped = false;
+        while (game.score(dealer) < 17)
+            game.hit();
+        //stay
+        // compare players and dealer scores
+        Player winner = game.scoreHands();
+        if(winner != null) {
+            textView.setText(winner.getName() + "Wins!");
+        }
+        int playerScore = game.score(game.getPlayers().get(1));
+        int dealerScore = game.score(game.getPlayers().get(0));
+
+        playerText.setText("Player: " + playerScore);
+        dealerText.setText("Dealer: " + dealerScore);
     }
 
     @Override
@@ -127,33 +148,26 @@ public class GameActivity extends Activity implements Runnable{
     boolean waitingForInput = false;
 
     public void resetGame() {
-        game = new Game();
-        // start with player1
-        game.nextPlayer();
-        textView.setText(game.getCurrentPlayer().getName() + "'s turn!");
+        game.newGame();
         waitingForInput = false;
+
+        textView.setText("New Game!");
+        playerText.setText("Player 1");
+        dealerText.setText("Dealer");
     }
 
     @Override
     public void run() {
-        // TODO Auto-generated method stub
         while(locker){
             //checks if the lockCanvas() method will be success,and if not, will check this statement again
-            if(!holder.getSurface().isValid()){
+            if(!holder.getSurface().isValid())
                 continue;
-            }
-
-            if(waitingForInput){
+            if(waitingForInput)
                 continue;
-            }
 
-            /** Start editing pixels in this surface.*/
+//                textView.setText(game.getCurrentPlayer().getName() + "'s turn!");
             Canvas canvas = holder.lockCanvas();
-
-            //ALL PAINT-JOB MAKE IN draw(canvas); method.
             draw(canvas);
-
-            // End of painting to canvas. system will paint with this canvas,to the surface.
             holder.unlockCanvasAndPost(canvas);
             waitingForInput = true;
         }
@@ -163,13 +177,8 @@ public class GameActivity extends Activity implements Runnable{
         // paint a background color
         canvas.drawColor(android.R.color.holo_blue_bright);
 
-        // paint a rectangular shape that fill the surface.
-        int border = 20;
-        RectF r = new RectF(border, border, canvas.getWidth()-5, canvas.getHeight()-5);
-        Paint paint = new Paint();
-        paint.setARGB(200, 135, 135, 135); //paint color GRAY+SEMI TRANSPARENT
-        canvas.drawRect(r , paint );
 
+        canvas.drawColor(Color.rgb(0, 135, 0));
 
         for( int i=0; i<game.getPlayers().size(); i++ )
         {
@@ -177,7 +186,6 @@ public class GameActivity extends Activity implements Runnable{
             for( int j=0; j < hand.size(); j++ )
             {
                 Card c = hand.get(j);
-                Log.i("player", game.getCurrentPlayer().getName());
 
                 if( i == 0 && j == 0 && game.isHoleFlipped)
                 {
@@ -210,6 +218,7 @@ public class GameActivity extends Activity implements Runnable{
             }
             break;
         }
+        game = null;
         thread = null;
     }
 
@@ -223,8 +232,9 @@ public class GameActivity extends Activity implements Runnable{
         //RESTART THREAD AND OPEN LOCKER FOR run();
         locker = true;
         thread = new Thread(this);
-
+        game = new Game();
         thread.start();
+        waitingForInput = false;
     }
 
 }

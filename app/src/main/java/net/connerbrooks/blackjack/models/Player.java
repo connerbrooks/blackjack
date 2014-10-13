@@ -24,6 +24,10 @@ public class Player {
         this.chips = chips;
     }
 
+    public void takeHand() {
+        hand.clear();
+    }
+
     public void giveCard(Card card) {
         hand.add(card);
     }

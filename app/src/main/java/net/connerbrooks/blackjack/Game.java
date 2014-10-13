@@ -11,8 +11,8 @@ import java.util.ArrayList;
 public class Game {
     private Deck gameDeck;
     private ArrayList<Player> players;
+    private int currPlayer;
     boolean isHoleFlipped;
-    int currPlayer;
 
     public Game() {
         gameDeck = new Deck();
@@ -20,8 +20,12 @@ public class Game {
         players = new ArrayList<Player>();
         players.add(new Player("Dealer", 500));
         players.add(new Player("Player1", 500));
+
+        // dealers hole card is flipped initially
         isHoleFlipped = true;
-        currPlayer = 0;
+
+        // Start with first player that is not dealer
+        currPlayer = 1;
 
         dealHands();
     }
@@ -45,9 +49,9 @@ public class Game {
 
         for(Card c : p.getHand()) {
             int rank = c.getRank();
-            if(rank <= 8)
+            if(rank <= 10)
                 score += rank;
-            if(rank <= 11)
+            else if(rank <= 13)
                 score += 10;
             else {
                 score += 11;
@@ -70,9 +74,16 @@ public class Game {
         Log.i("Hand Size after deal", "size: " + players.get(0).getHand().size());
     }
 
+    public void newGame() {
+        for(Player p : players) {
+            p.takeHand();
+        }
+        dealHands();
+        currPlayer = 1;
+    }
 
-    public void hit(Player p) {
-        p.giveCard(gameDeck.deal());
+    public void hit() {
+        getCurrentPlayer().giveCard(gameDeck.deal());
     }
 
     public ArrayList<Player> getPlayers() {
