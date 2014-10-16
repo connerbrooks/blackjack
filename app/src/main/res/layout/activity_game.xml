@@ -13,44 +13,15 @@
         android:layout_height="wrap_content"
         android:text="Hit"
         android:id="@+id/hit"
-        android:layout_gravity="left|bottom" />
+        android:layout_gravity="left|bottom"
+        android:textColor="#FFFFFF"/>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Stay"
         android:id="@+id/stay"
-        android:layout_gravity="right|bottom" />
-
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingRight="10dp"
-        android:paddingTop="10dp"
-        android:text="Player1"
-        android:id="@+id/playerText"
-        android:layout_gravity="right|top"
+        android:layout_gravity="right|bottom"
         android:textColor="#FFFFFF" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingLeft="10dp"
-        android:paddingTop="10dp"
-        android:text="Dealer"
-        android:id="@+id/dealerText"
-        android:layout_gravity="left|top"
-        android:textColor="#FFFFFF" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text=""
-        android:id="@+id/winnerText"
-        android:layout_gravity="center_horizontal|bottom"
-        android:textColor="#FFFFFF"/>
-
 
 </FrameLayout>

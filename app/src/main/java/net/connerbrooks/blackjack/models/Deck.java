@@ -14,7 +14,7 @@ public class Deck {
 
     private void fill() {
         int index = 0;
-        for(int r=1; r <= 13; r++)
+        for(int r=2; r <= 14; r++)
            for(int s=1; s<=4; s++) {
                cards[index] = new Card(r, s);
                index++;
@@ -32,7 +32,10 @@ public class Deck {
     }
 
     public Card deal() {
-        if(numCards == 0) return null;
+        if(numCards == 0){
+            fill();
+            shuffle();
+        }
         numCards--;
         return cards[numCards];
     }

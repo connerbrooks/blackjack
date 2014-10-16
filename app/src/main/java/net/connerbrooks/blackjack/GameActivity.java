@@ -6,15 +6,14 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 
 import net.connerbrooks.blackjack.models.Card;
 import net.connerbrooks.blackjack.models.Player;
@@ -36,17 +35,13 @@ public class GameActivity extends Activity implements Runnable{
     Bitmap[] cardImages;
     Bitmap mCardBack;
 
-    TextView textView;
-    TextView dealerText;
-    TextView playerText;
+    boolean gameOver = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_game);
-        textView  = (TextView) findViewById(R.id.winnerText);
-        dealerText = (TextView) findViewById(R.id.dealerText);
-        playerText = (TextView) findViewById(R.id.playerText);
 
         game = new Game();
 
@@ -65,13 +60,13 @@ public class GameActivity extends Activity implements Runnable{
         hit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Player curr = game.getCurrentPlayer();
                 game.hit();
-                if(game.score(curr) > 21) {
-                    textView.setText(curr.getName() + " busts!");
+                if(game.score(game.getCurrentPlayer()) > 21)
+                    game.nextPlayer();
+
+                if(game.getCurrentPlayer().getName().equals("Dealer")) {
                     dealerAI();
                 }
-
                 waitingForInput = false;
             }
         });
@@ -80,11 +75,29 @@ public class GameActivity extends Activity implements Runnable{
             @Override
             public void onClick(View v) {
                 waitingForInput = false;
-                game.isHoleFlipped = false;
                 game.nextPlayer();
-                dealerAI();
+
+                if(game.getCurrentPlayer().getName().equals("Dealer")){
+                    dealerAI();
+                }
             }
         });
+    }
+
+    void dealerAI() {
+        Player dealer = game.getCurrentPlayer();
+        //gameOver = true;
+        game.isHoleFlipped = false;
+        while (game.score(dealer) < 17)
+            game.hit();
+
+        waitingForInput = false;
+    }
+
+    public void resetGame() {
+        game.newGame();
+        //gameOver = false;
+        waitingForInput = false;
     }
 
     public void loadBitmaps() {
@@ -105,23 +118,6 @@ public class GameActivity extends Activity implements Runnable{
         }
     }
 
-    void dealerAI() {
-        Player dealer = game.getCurrentPlayer();
-        game.isHoleFlipped = false;
-        while (game.score(dealer) < 17)
-            game.hit();
-        //stay
-        // compare players and dealer scores
-        Player winner = game.scoreHands();
-        if(winner != null) {
-            textView.setText(winner.getName() + "Wins!");
-        }
-        int playerScore = game.score(game.getPlayers().get(1));
-        int dealerScore = game.score(game.getPlayers().get(0));
-
-        playerText.setText("Player: " + playerScore);
-        dealerText.setText("Dealer: " + dealerScore);
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -147,14 +143,6 @@ public class GameActivity extends Activity implements Runnable{
 
     boolean waitingForInput = false;
 
-    public void resetGame() {
-        game.newGame();
-        waitingForInput = false;
-
-        textView.setText("New Game!");
-        playerText.setText("Player 1");
-        dealerText.setText("Dealer");
-    }
 
     @Override
     public void run() {
@@ -162,6 +150,8 @@ public class GameActivity extends Activity implements Runnable{
             //checks if the lockCanvas() method will be success,and if not, will check this statement again
             if(!holder.getSurface().isValid())
                 continue;
+            if(gameOver)
+                resetGame();
             if(waitingForInput)
                 continue;
 
@@ -173,19 +163,41 @@ public class GameActivity extends Activity implements Runnable{
         }
     }
 
+
+    int cardCount = 0;
+
     private void draw(Canvas canvas) {
         // paint a background color
-        canvas.drawColor(android.R.color.holo_blue_bright);
-
-
+        //canvas.drawColor(android.R.color.holo_blue_bright);
         canvas.drawColor(Color.rgb(0, 135, 0));
 
         for( int i=0; i<game.getPlayers().size(); i++ )
         {
             ArrayList<Card> hand = game.getPlayers().get(i).getHand();
+
+            Paint paint = new Paint();
+            paint.setColor(Color.WHITE);
+
+            paint.setTextSize(30);
+            int score = game.score(game.getPlayers().get(i));
+
+            if(score > 21) {
+                canvas.drawText("BUST", 20, 200 + i * 400, paint);
+            }
+
+            canvas.drawText(game.getPlayers().get(i).getName() + ": " +  score, 20, 100 + i * 400, paint);
+            //canvas.drawText("Bet" + game.getPlayers().get(i).getChips(), 20, 100 + i * 400, paint);
+
+            canvas.drawText("Count: " + game.cardCounting, 800, 100, paint);
+
+            if(game.getPlayers().get(i).equals(game.getCurrentPlayer())) {
+                canvas.drawText("Turn -> ", 20, 150 + i * 400, paint);
+            }
+
             for( int j=0; j < hand.size(); j++ )
             {
                 Card c = hand.get(j);
+
 
                 if( i == 0 && j == 0 && game.isHoleFlipped)
                 {
@@ -193,7 +205,6 @@ public class GameActivity extends Activity implements Runnable{
                 }
                 else
                 {
-                    Log.i("Card number", "" + c.getCardIndex());
                     canvas.drawBitmap(cardImages[c.getCardIndex()], 400 + j * 50, 100 + i * 400, null );
                 }
             }

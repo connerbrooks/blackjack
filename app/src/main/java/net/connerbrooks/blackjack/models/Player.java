@@ -32,6 +32,7 @@ public class Player {
         hand.add(card);
     }
 
+    // Todo: implement betting system
     public void setChips(int chips) {
         this.chips = chips;
     }

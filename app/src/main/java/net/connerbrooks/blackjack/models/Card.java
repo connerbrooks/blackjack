@@ -22,6 +22,17 @@ public class Card {
         else val = String.valueOf(rank);
         return val + " of " + suitList[suit];
     }
+    /*
+    1
+    2
+    3
+    4
+    5
+    6
+
+
+
+     */
 
     public int getRank() {
         return rank;

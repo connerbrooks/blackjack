@@ -13,13 +13,15 @@ public class Game {
     private ArrayList<Player> players;
     private int currPlayer;
     boolean isHoleFlipped;
+    int cardCounting;
 
     public Game() {
         gameDeck = new Deck();
 
         players = new ArrayList<Player>();
         players.add(new Player("Dealer", 500));
-        players.add(new Player("Player1", 500));
+        players.add(new Player("Player 1", 500));
+        players.add(new Player("Player 2", 500));
 
         // dealers hole card is flipped initially
         isHoleFlipped = true;
@@ -68,8 +70,11 @@ public class Game {
     // Deal cards to players
     public void dealHands() {
         for(Player p : players)
-            for(int i = 0; i < 2; i++)
-                p.giveCard(gameDeck.deal());
+            for(int i = 0; i < 2; i++) {
+                Card c = gameDeck.deal();
+                countCard(c);
+                p.giveCard(c);
+            }
 
         Log.i("Hand Size after deal", "size: " + players.get(0).getHand().size());
     }
@@ -82,8 +87,19 @@ public class Game {
         currPlayer = 1;
     }
 
+    public void countCard(Card c) {
+        if(c.getRank() >=2 && c.getRank() <= 6)
+            cardCounting+=1;
+        else if(c.getRank() >= 10 && c.getRank() <= 14)
+            cardCounting-=1;
+        else
+            ;
+    }
+
     public void hit() {
-        getCurrentPlayer().giveCard(gameDeck.deal());
+        Card c = gameDeck.deal();
+        getCurrentPlayer().giveCard(c);
+        countCard(c);
     }
 
     public ArrayList<Player> getPlayers() {
