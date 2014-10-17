@@ -83,6 +83,7 @@ public class Game {
         for(Player p : players) {
             p.takeHand();
         }
+        isHoleFlipped = true;
         dealHands();
         currPlayer = 1;
     }
